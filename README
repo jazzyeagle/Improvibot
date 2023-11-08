@@ -1,0 +1,5 @@
+Required libraries:
+- JACK-Client
+- mido
+- python-dotenv
+- tensorflow
