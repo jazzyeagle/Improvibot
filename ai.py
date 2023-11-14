@@ -7,18 +7,24 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import mido
 from mido import MidiFile, MidiTrack, Message
-from midojack import make_note
+from song import Song
 
 gpu_devices = tf.config.experimental.list_physical_devices('GPU')
 for device in gpu_devices:
     tf.config.experimental.set_memory_growth(device, True)
 
-NUM_NOTES = 10
+NUM_NOTES = 8
 NOTE_VALUES = 128
 VELOCITY_VALUES = 128
-NOTE_LENGTHS = [0.25, 0.5, 1.0, 2.0, 4.0]
+NOTE_LENGTHS = [0.25,   # 16th Note
+                0.5,    # 8th  Note
+                1.0,    # Quarter Note
+                2.0,    # Half Note
+                4.0]    # Whole Note
 FEEDBACK_VALUES = [1, 2, 3, 4, 5]
-epochs = 1000
+
+epochs = 1  # Temporarily setting to 1 for testing purposes
+#epochs = 1000
 
 
 def generate_initial_sequence(num_notes):
@@ -38,17 +44,14 @@ model.compile(optimizer='adam', loss='mse')
 
 
 def generate_midi(outport, model_output):
+    s = Song()
     # Convert model output to MIDI messages
-    midi_track = MidiTrack()
-    print(model_output)
-    #for output in model_output[0]:
-    #    print(output)
-    #    msg = Message('note_on', note=output[0], velocity=output[1])
-    #    midi_track.append(msg)
-    #    msg = Message('note_off', note=output[0], velocity=0)
-    #    midi_track.append(msg)
-    for note, velocity, length in model_output:
-        make_note(outport, note, velocity, length)
+    midi_track = s.add_instrument()
+    for n in model_output:
+        for note, velocity, length in n:
+            s.make_note(midi_track, note, velocity, length)
+    s.save('test_midi.mid')
+    s.play(outport)
 
 
 def get_user_feedback():
@@ -73,7 +76,11 @@ def run(outport):
             input_sequence['velocity'],
             input_sequence['length']
         ]).T  # Transpose to have shape (num_notes, 3)
-        model_output = model.predict(np.array([input_sequence]))
+        model_output = []
+        model_output.append(model.predict(np.array([input_sequence])))
+        model_output = [input_sequence]
+        print(f'model_output: {model_output}')
         user_feedback = get_user_feedback()
         generate_midi(outport, model_output)
+
         train_model(model, input_sequence, user_feedback)

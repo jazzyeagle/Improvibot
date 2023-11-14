@@ -4,7 +4,7 @@
 
 import os
 import jack
-from mido import Message
+from mido import Message, tick2second
 from mido.ports import BaseOutput
 
 client = jack.Client(os.environ['JACK_NAME'])
@@ -27,6 +27,7 @@ def get_devices():
 
 class Output(BaseOutput):
     def _open(self, **kwargs):
+        print('_open')
         outbound_message_queue = {}
         self.current_frame = 0
         for output_port in os.environ['JACK_MIDI_OUTPUT_PORTS'].split('|'):
@@ -37,10 +38,12 @@ class Output(BaseOutput):
         client.activate()
 
     def _close(self, **kwargs):
+        print('_close')
         client.deactivate()
         client.close()
 
     def process(self, nframes):
+        #print(f'process: {len(list(outbound_message_queue.keys()))}')
         if len(list(outbound_message_queue.keys())) > 0:
             for curr_output in client.midi_outports:
                 curr_output.clear_buffer()
@@ -60,34 +63,12 @@ class Output(BaseOutput):
             current_time = next(reversed(outbound_message_queue.keys()))
         else:
             current_time = 0
-        new_time = current_time + message.time
-        if new_time not in outbound_message_queue:
-            outbound_message_queue[new_time] = []
+        print(f'time: {message.dict()["time"]}, samplerate: {client.samplerate}')
+        #new_time = int((message.dict()['time'] / 120) * client.samplerate)
+        new_time = int(message.dict()['time'])
+        stored_time = current_time + new_time
+        print(f'new_time: {new_time}, stored_time: {stored_time}')
+        if stored_time not in outbound_message_queue:
+            outbound_message_queue[stored_time] = []
             
-        outbound_message_queue[new_time].append(message.copy())
-
-def make_note(outport, note_float, velocity_float, length_float):
-    note = float_to_int(note_float)
-    velocity = float_to_int(velocity_float)
-    length = float_to_length(length_float)
-    print(f'Note: {note}\tVelocity: {velocity}\tLength: {length}\n')
-    outport._send(Message('note_on',  note=note, velocity=velocity))
-    outport._send(Message('note_off', note=note, velocity=velocity, time=length))
-
-# Converts a floating point number to an int in the range of 0 - 127
-# Negative numbers will be 0 - 64, Positive 65 - 127
-def float_to_int(value):
-    return int(value * 128)
-    #if value < 0:
-    #    offset = 0
-    #else:
-    #    offset = 64
-    #return int(abs(value) * 31) + offset
-
-# TODO: Current logic assumes client.samplerate = 1 quarter note
-#       Need to adjust to account for BPM in the future
-def float_to_length(value):
-    length_index = int(value * 6)
-    #length_index = int((abs(value) - int(abs(value))) * 6)
-    print(f'\tlength_index: {length_index}')
-    return int(NOTE_LENGTHS[length_index] * client.samplerate)
+        outbound_message_queue[stored_time].append(message.copy(time=new_time))
