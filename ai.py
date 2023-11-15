@@ -14,13 +14,16 @@ for device in gpu_devices:
     tf.config.experimental.set_memory_growth(device, True)
 
 NUM_NOTES = 8
-NOTE_VALUES = 128
-VELOCITY_VALUES = 128
+NOTE_VALUES_MIN = 32
+NOTE_VALUES_MAX = 96
+VELOCITY_VALUES_MIN=40
+VELOCITY_VALUES_MAX = 80
 NOTE_LENGTHS = [0.25,   # 16th Note
                 0.5,    # 8th  Note
                 1.0,    # Quarter Note
-                2.0,    # Half Note
-                4.0]    # Whole Note
+                2.0     # Half Note
+                ]
+                #4.0]    # Whole Note
 FEEDBACK_VALUES = [1, 2, 3, 4, 5]
 
 epochs = 1  # Temporarily setting to 1 for testing purposes
@@ -29,8 +32,8 @@ epochs = 1  # Temporarily setting to 1 for testing purposes
 
 def generate_initial_sequence(num_notes):
     return {
-        'note': np.random.randint(0, NOTE_VALUES, num_notes),
-        'velocity': np.random.randint(0, VELOCITY_VALUES, num_notes),
+        'note': np.random.randint(NOTE_VALUES_MIN, NOTE_VALUES_MAX, num_notes),
+        'velocity': np.random.randint(VELOCITY_VALUES_MIN, VELOCITY_VALUES_MAX, num_notes),
         'length': np.random.choice(NOTE_LENGTHS, num_notes)
     }
 
@@ -50,8 +53,12 @@ def generate_midi(outport, model_output):
     for n in model_output:
         for note, velocity, length in n:
             s.make_note(midi_track, note, velocity, length)
-    s.save('test_midi.mid')
-    s.play(outport)
+    s.tracks.append(midi_track)
+    print(s.length)
+    #s.save('test_midi.mid')
+    for msg in s.play():
+        print(msg)
+    s.jackplay(outport)
 
 
 def get_user_feedback():
@@ -68,7 +75,7 @@ def train_model(model, input_sequence, feedback):
 
     model.fit(input_sequence[np.newaxis, :, :], target_output, epochs=1, verbose=0)
 
-def run(outport):
+def generate_song(outport):
     for epoch in range(epochs):
         input_sequence = generate_initial_sequence(NUM_NOTES)
         input_sequence = np.array([
@@ -81,6 +88,6 @@ def run(outport):
         model_output = [input_sequence]
         print(f'model_output: {model_output}')
         user_feedback = get_user_feedback()
-        generate_midi(outport, model_output)
-
+        song = generate_midi(outport, model_output)
         train_model(model, input_sequence, user_feedback)
+        return song

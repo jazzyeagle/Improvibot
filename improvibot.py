@@ -8,5 +8,10 @@ import ai
 mido.set_backend(name='midojack', load=True)
 
 with mido.open_output() as outport:
-    ai.run(outport)
-    input('Press [Enter] to quit')
+    cont = True
+    while cont:
+        song = ai.generate_song(outport)
+        print('Press [Enter] to generate a new song, "quit" to quit.')
+        response = input()
+        if response == 'quit':
+            cont= False

@@ -4,7 +4,7 @@
 
 from enum import Enum
 import mido
-from mido import Message, MetaMessage, MidiFile
+from mido import Message, MetaMessage, MidiFile, MidiTrack
 from midojack import client
 
 mido.set_backend(name='midojack', load=True)
@@ -76,18 +76,20 @@ NOTE_LENGTHS = [0.25,   # 16th Note
                 2.0,    # Half Note
                 4.0]    # Whole Note
 
-class Song:
+class Song(MidiFile):
     def __init__(self, key=Key.C, mode=Mode.Major, bpm=120, beats_per_bar=4, beat_note=4):
+        super().__init__(type=0)
         self.key   = key
         self.mode  = mode
         self.bpm   = bpm
         self.bpb   = beats_per_bar
         self.nb    = beat_note
         self.tempo = mido.bpm2tempo(self.bpm, time_signature=(self.bpb, self.nb))
-        self.song  = MidiFile(type=0)
 
-    def add_instrument(self, name=None):
-        track = self.song.add_track(name)
+    def add_instrument(self, name='instrument 1'):
+        #track = self.add_track(name)
+        track = MidiTrack()
+        track.name = name
         track.append(MetaMessage('set_tempo', tempo=mido.bpm2tempo(self.bpm, time_signature=(self.bpb, self.nb))))
         track.append(MetaMessage('time_signature', numerator=self.bpb, denominator=self.nb))
         track.append(MetaMessage('key_signature', key=key_name(self.key)))
@@ -95,26 +97,28 @@ class Song:
         #      custom meta messages may need to be generated.  See https://mido.readthedocs.io/en/latest/meta_message_types.html?highlight=MetaMessage#implementing-new-or-custom-meta-messages
         return track
 
-    def play(self, outport):
-        print(f'\t# Tracks:    {len(self.song.tracks)}')
-        print(f'\tsong length: {self.song.length}')
-        self.song.print_tracks()
-        for msg in self.song.tracks[0]:
-            if(not msg.is_meta):
+    def jackplay(self, outport):
+        print(f'\t# Tracks:    {len(self.tracks)}')
+        print(f'\tsong length: {self.length}\n')
+        #self.print_tracks()
+        for msg in self.tracks[0]:
+        #for msg in self.play():
+            if (not msg.is_meta):
+                message = msg.copy()
                 # Convert the timestamp so the midojack module can convert to samplerate
-                if msg.time==0:
-                    message = msg.copy()
-                else:
-                    message = msg.copy(time=self.tempo2bpm(msg.time))
+                #if msg.time==0:
+                #    message = msg.copy()
+                #else:
+                #    message = msg.copy(time=self.tempo2bpm(msg.time))
                 outport._send(message)
 
-    def save(self, filename):
-        self.song.save(filename)
+    #def save(self, filename):
+    #    self.save(filename)
 
     def make_note(self, track, note_float, velocity_float, length_float):
         note = int(note_float)
         velocity = int(velocity_float)
-        length = self.note_length_tempo(length_float)
+        length = self.note_length_ticks(length_float)
 
         print(f'Note: {note}\tVelocity: {velocity}\tLength: {length}\n')
         track.append(Message('note_on',  note=note, velocity=velocity))
@@ -126,6 +130,9 @@ class Song:
     def note_length_bpm(self, value):
         return int(self.bpm * value)
 
+    def note_length_ticks(self, value):
+        return int(self.ticks_per_beat * value)
+    
     def tempo2bpm(self, value):
         print(f'value={value}, time_signature = {self.bpb}/{self.nb}, new_value: {int(mido.tempo2bpm(value, time_signature=(self.bpb, self.nb)))}')
         return int(mido.tempo2bpm(value, time_signature=(self.bpb, self.nb)))

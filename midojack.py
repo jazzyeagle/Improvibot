@@ -64,8 +64,9 @@ class Output(BaseOutput):
         else:
             current_time = 0
         print(f'time: {message.dict()["time"]}, samplerate: {client.samplerate}')
+        new_time = int((message.dict()['time'] / 480) * client.samplerate)
         #new_time = int((message.dict()['time'] / 120) * client.samplerate)
-        new_time = int(message.dict()['time'])
+        #new_time = int(message.dict()['time'])
         stored_time = current_time + new_time
         print(f'new_time: {new_time}, stored_time: {stored_time}')
         if stored_time not in outbound_message_queue:
