@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import mido
-from mido import MidiFile, MidiTrack, Message
+from mido import MidiFile, MidiTrack, Message, merge_tracks
 from song import Song
 
 gpu_devices = tf.config.experimental.list_physical_devices('GPU')
@@ -54,11 +54,11 @@ def generate_midi(outport, model_output):
         for note, velocity, length in n:
             s.make_note(midi_track, note, velocity, length)
     s.tracks.append(midi_track)
+    s.merged_track = merge_tracks(s.tracks)
     print(s.length)
     #s.save('test_midi.mid')
-    for msg in s.play():
-        print(msg)
     s.jackplay(outport)
+    return s
 
 
 def get_user_feedback():

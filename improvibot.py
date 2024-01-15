@@ -7,7 +7,7 @@ import ai
 
 mido.set_backend(name='midojack', load=True)
 
-with mido.open_output() as outport:
+with mido.open_output(autoreset=True) as outport:
     cont = True
     while cont:
         song = ai.generate_song(outport)
@@ -15,3 +15,4 @@ with mido.open_output() as outport:
         response = input()
         if response == 'quit':
             cont= False
+            outport.panic()

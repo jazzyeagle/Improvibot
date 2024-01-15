@@ -4,6 +4,7 @@
 
 import os
 import jack
+import mido
 from mido import Message, tick2second
 from mido.ports import BaseOutput
 
@@ -39,6 +40,9 @@ class Output(BaseOutput):
 
     def _close(self, **kwargs):
         print('_close')
+        #for outport in client.midi_outports:
+        #    outport._send(Message('control_change', control=123, value=0))
+        #mido.ports.reset_messages()
         client.deactivate()
         client.close()
 
