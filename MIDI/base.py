@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class Encoding(Enum):
@@ -9,19 +9,23 @@ class Encoding(Enum):
 class Base:
     def __init__(self, timestamp=0, include_data_length=False):
         self._event_code = b''
-        self.timestamp = timestamp
+        if type(timestamp) == 'bytes':
+            self.timestamp = timestamp
+        else:
+            self.timestamp = timestamp.to_bytes()
         self.include_data_length = include_data_length
 
     def data(self):
         raise NotImplementedError
 
     def event_code(self):
-        if(self._event_code == b''):
+        if (self._event_code == b''):
             raise NotImplementedError
-        return self._event_code
+        else:
+            return self._event_code
 
     def encode(self, encoding, ticks=500000, bpm=120, sample_rate=44100):
-        if encoding == Base.Encoding.MIDI:
+        if encoding == Encoding.MIDI:
             ts = self.timestamp
         else:
             ts = b''

@@ -1,4 +1,4 @@
-from meta_message import MetaMessage
+from MIDI.message.internal import MetaMessage
 
 # channel should be a value between 0 & 15
 

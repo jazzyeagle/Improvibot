@@ -1,7 +1,7 @@
-from midi.message import Message
+from MIDI.message.internal import MetaMessage
 
 
-class EndOfTrack(Message):
+class EndOfTrack(MetaMessage):
     def __init__(self, timestamp=0):
         super().__init__(timestamp)
         self._event_code = bytes.fromhex('FF2F00')
