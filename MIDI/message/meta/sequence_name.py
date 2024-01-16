@@ -9,4 +9,4 @@ from MIDI.message.internal import MetaTextMessage
 class SequenceName(MetaTextMessage):
     def __init__(self, timestamp=0, text=''):
         super().__init__(timestamp, text)
-        self._event_code = bytes.fromhex('FF03')
+        self._event_code = bytes.fromhex('FF 03')

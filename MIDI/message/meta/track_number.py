@@ -15,7 +15,7 @@ class TrackNumber(MetaMessage):
     def __init__(self, timestamp=0, track_num=1):
         super().__init__(timestamp)
         self._event_code = bytes.fromhex('FF0002')
-        self.track_number = track_num.to_bytes()
+        self.track_number = track_num.to_bytes(2, 'big')
 
-    def data():
+    def data(self):
         return self.track_number

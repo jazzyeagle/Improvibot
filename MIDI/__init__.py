@@ -25,5 +25,6 @@ from MIDI.message.meta.sequence_number import SequenceNumber
 from MIDI.message.meta.smpte import SMPTE
 from MIDI.message.meta.tempo import Tempo
 from MIDI.message.meta.text import Text
+from MIDI.message.meta.time_signature import TimeSignature
 from MIDI.message.meta.track_name import TrackName
 from MIDI.message.meta.track_number import TrackNumber

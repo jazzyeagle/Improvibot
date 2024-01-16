@@ -8,5 +8,5 @@ from MIDI.message.internal import MetaTextMessage
 
 class TrackName(MetaTextMessage):
     def __init__(self, timestamp=0, text=''):
-        super().__init__()
-        self._event_code = (0xFF03).to_bytes()
+        super().__init__(timestamp, text)
+        self._event_code = bytes.fromhex('FF 03')

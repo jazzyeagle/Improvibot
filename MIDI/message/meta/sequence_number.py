@@ -17,5 +17,5 @@ class SequenceNumber(MetaMessage):
         self._event_code = bytes.fromhex('FF 00 02')
         self.sequence_number = seq_num.to_bytes(2, 'big')
 
-    def data():
+    def data(self):
         return self.sequence_number

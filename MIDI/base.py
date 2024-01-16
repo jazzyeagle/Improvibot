@@ -12,7 +12,7 @@ class Base:
         if type(timestamp) == 'bytes':
             self.timestamp = timestamp
         else:
-            self.timestamp = timestamp.to_bytes()
+            self.timestamp = timestamp.to_bytes(self.length(timestamp))
         self.include_data_length = include_data_length
 
     def data(self):
@@ -41,3 +41,9 @@ class Base:
     #    have to report total length
     def size(self):
         return len(self.encode(Base.Encoding.MIDI))
+
+    def length(self, value):
+        return 1 if value == 0 else ((value.bit_length() + 7) // 8)
+
+    def size_to_bytes(self, value):
+        return value.to_bytes(length=self.length(value))

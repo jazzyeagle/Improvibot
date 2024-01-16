@@ -2,15 +2,12 @@ from MIDI.base import Base, Encoding
 
 
 class Message(Base):
-    def __init__(self, timestamp=0):
-        super().__init__(timestamp)
+    def __init__(self, timestamp=0, include_data_length=False):
+        super().__init__(timestamp, include_data_length)
         self._event_code = b''
 
     def data(self):
         return NotImplementedError
-
-    def size_to_bytes(self, value):
-        return value.to_bytes(length=((value.bit_length() // 8) + 1))
 
     def get_note_length(self, encoding, ticks, bpm, sample_rate):
         if encoding == Encoding.MIDI:
@@ -35,13 +32,8 @@ class ChannelMessage(Message):
 
 class MetaMessage(Message):
     def __init__(self, timestamp=0, include_data_length=False):
-        if type(timestamp) == 'bytes':
-            self.timestamp = timestamp
-        else:
-            self.timestamp = timestamp.to_bytes()
-
-        self.event_code = b''
-
+        super().__init__(timestamp, include_data_length)
+        self._event_code = b''
         self.include_data_length = include_data_length
 
     def data(self):
@@ -52,7 +44,6 @@ class MetaTextMessage(Message):
     def __init__(self, timestamp=0, text=''):
         super().__init__(timestamp, include_data_length=True)
         self._event_code = b''
-        self.timestamp = timestamp
         self.text = bytes(text, 'ascii')
 
     def data(self):
