@@ -40,7 +40,7 @@ class Base:
     # Returns the length of the message in bytes, used for MIDI files where tracks
     #    have to report total length
     def size(self):
-        return len(self.encode(Base.Encoding.MIDI))
+        return len(self.encode(Encoding.MIDI))
 
     def length(self, value):
         return 1 if value == 0 else ((value.bit_length() + 7) // 8)
